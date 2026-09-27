@@ -26,8 +26,9 @@ http
 
     //hakkame erinevaid lehti jaotama -> routes
 
+    const fileExt = path.extname(currentURL.pathname);
     if (
-      currentURL.pathname.endsWith(".jpg") ||
+      fileExt === ".jpg" ||
       currentURL.pathname === "/img/veebiprogrammeerimine_2026_TA.png"
     ) {
       let imgPath = path.join(
@@ -37,9 +38,7 @@ http
       );
       try {
         const data = await fs.readFile(imgPath);
-        const contentType = currentURL.pathname.endsWith(".jpg")
-          ? "image/jpeg"
-          : "image/png";
+        const contentType = fileExt === ".jpg" ? "image/jpeg" : "image/png";
         res.writeHead(200, { "Content-Type": contentType });
         return res.end(data);
       } catch (err) {
@@ -71,10 +70,18 @@ http
       );
       res.write('\n\t\n\t\t<li><a href="/info">Info minu kohta</a></li></ul>');
 
+      res.write(logo);
       res.write(pageFoot);
       // res.write("Veeb läkski käima!");
       return res.end();
     } else if (currentURL.pathname === "/vanasona") {
+      let wisdom;
+      try {
+        wisdom = await folkWisdom.wisdom();
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+        return res.end("Vanasõna laadimine ebaõnnestus.");
+      }
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       res.write(pageHead);
       res.write(pageBanner);
@@ -83,7 +90,7 @@ http
         "\t<h1>Eesti vanasonad</h1>\n\t<p>Siin naed tanase paeva vanasonu.</p>\n\t",
       );
 
-      res.write("\t<p>Sinu vanasõna: " + (await folkWisdom.wisdom()));
+      res.write("\t<p>Sinu vanasõna: " + wisdom);
 
       res.write('\n\t<p><a href="/">Tagasi avalehele</a></p>');
 
